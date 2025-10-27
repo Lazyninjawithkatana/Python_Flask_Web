@@ -6,7 +6,7 @@ import database_const
 import re
 
 app = Flask(__name__)
-# ეს უნდა იყოს ძლიერი, უნიკალური გასაღები
+
 app.secret_key = 'jkhaksjhdkajshdkjsah13123kjahsd'
 
 #Db connection
@@ -25,7 +25,6 @@ def db_connection():
         return None
 
 #Main page / Sign In
-# დავამატე '/' როგორც მთავარი როუტი
 @app.route('/', methods=['GET','POST'])
 @app.route('/sign_in', methods=['GET','POST'])
 def sign_in():
@@ -42,7 +41,6 @@ def sign_in():
         conn = db_connection()
         if not conn:
             flash('Database connection error', 'error')
-            # შესწორებულია
             return redirect(url_for('sign_in'))
     
         sql = 'SELECT id, username, email, password FROM users WHERE username = %s'
@@ -52,9 +50,7 @@ def sign_in():
             user = cur.fetchone()
             
             if user:
-                # user[0]: id, user[1]: username, user[2]: email, user[3]: password hash
                 if check_password_hash(user[3], password): 
-                    # სესიის ცვლადები შესწორებულია
                     session['user_id'] = user[0]
                     session['user_name'] = user[1] 
                     session['user_email'] = user[2]
@@ -71,7 +67,7 @@ def sign_in():
             if conn:
                 conn.rollback()
             flash('Database error during login. Please try again', 'error')
-            return redirect(url_for('sign_in')) # შესწორებულია
+            return redirect(url_for('sign_in'))
         finally:
             if cur:
                 cur.close()
@@ -94,7 +90,7 @@ def register():
         if not all([username, email, password, confirm_password]):
             errors.append('All fields are required.')
         if password != confirm_password:
-            errors.append('Passwords do not match.') # შესწორებულია
+            errors.append('Passwords do not match.')
         if len(password) < 8:
             errors.append('Password must be at least 8 characters long.')
         if not re.fullmatch(r'[^@]+@[^@]+\.[^@]+', email):
@@ -120,14 +116,12 @@ def register():
             cur.execute(sql, (username, email, hashed_password))
             conn.commit()
             
-            # შეტყობინება შესწორებულია
             flash('Registration successful. Please log in.', 'success')
             return redirect(url_for('sign_in'))
             
         except psycopg2.IntegrityError:
             if conn:
                 conn.rollback()
-            # დავამატე Username-ის შემოწმებაც
             flash('Username or Email already exists.', 'error') 
             return redirect(url_for('register'))
         except psycopg2.Error as e:
@@ -141,23 +135,18 @@ def register():
             if conn:
                 conn.close()
     
-    # GET მოთხოვნა register-ზე აჩვენებს მთავარ გვერდს
     return render_template('main_page.html') 
 
 #Dashboard page
-# როუტი შესწორებულია
 @app.route('/dashboard') 
 def dashboard():
     if 'user_id' not in session:
-        # Flash შეტყობინება შესწორებულია
         flash('Please log in to access the dashboard.', 'error') 
         return redirect(url_for('sign_in'))
     
-    # ცვლადების ამოღება სესიიდან შესწორებულია
     username = session.get('user_name', 'Guest')
     email = session.get('user_email', 'No Email')
-    
-    # შაბლონის სახელი და ცვლადების გადაცემა შესწორებულია
+
     return render_template('dashboard_page.html', user_email=email, user_name=username)
 
 # Logout
@@ -170,4 +159,5 @@ def logout():
     return redirect(url_for('sign_in'))
 
 if __name__ == '__main__':
+
     app.run(debug=True)
